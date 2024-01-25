@@ -4,9 +4,9 @@
 
   InterSystems FHIR R4 version needs to be installed
 
-# ZPM installation
+# IPM
 
-  zpm fhirmessageverification
+  install fhirmessageverification
 # USE
 
   1. MessageVerification
