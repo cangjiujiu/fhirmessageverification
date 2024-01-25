@@ -237,41 +237,46 @@
 	        addListAppender(root, function () {
 		        console.log(path)
 		        var temppath=path
-		        var patharray=temppath.split(' ')
+		        var patharray=temppath.split('.')
 	        console.log("111111")
 	        console.log(patharray.length)
+	         console.log(patharray)
 	        var name=""
 	        var tpath=""
 	        for (i=0;i<patharray.length-1;i++)
 	        {
 		        tpath=tpath+patharray[i]+"."
 		    }
-		    name=tpath+patharray[patharray.length-1]
+		    name=patharray[patharray.length-1]
 		    console.log(tpath,",",name)
 		    if (tpath!="")
 		    {
-			  tpath= tpath.substr(1,-1)   
+			  tpath= tpath.slice(0,-1)   
 			}
-	            //path ½ØÈ¡ÎªpathµÄÇ°¼¸Î»
+			console.log(tpath,",",name)
+	            //path æˆªå–ä¸ºpathçš„å‰å‡ ä½
 	          $.ajax('http://'+window.location.host+'/fhirMessageVerification/getResourceValue', {
 
                 method: 'POST',
 
                 data: {"name":name ,"path":tpath ,"rType":$('#namelist').val()},
                 success: function (result) {
-	                console.log(result)
+	                 console.log( obj)
+	                console.log(typeof obj)
 	                try {
             var obj=JSON.parse(result);
+            console.log(obj)
+            var obj=obj[0]
             if(typeof obj == 'object' && obj ){
                 //return true;
-                vResult=JSON.parse(result)
+                vResult=obj
             }else{
                 //return false;
-                vResult=result.replace('\r\n', '')
+                vResult=obj.replace('\r\n', '')
             }
- 
+            // vResult=result.replace('\r\n', '')
         } catch(e) {
-           // console.log('error£º'+str+'!!!'+e);
+           // console.log('errorï¼š'+str+'!!!'+e);
              vResult=result.replace('\r\n', '')
         }
         console.log(vResult)
@@ -306,7 +311,7 @@
             }
  
         } catch(e) {
-           // console.log('error£º'+str+'!!!'+e);
+           // console.log('errorï¼š'+str+'!!!'+e);
              vResult=result.replace('\r\n', '')
         }
 	                addNewValue(Tjson, vResult);
