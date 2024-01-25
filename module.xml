@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+  <Document name="fhirmessageverification.ZPM">
+    <Module>
+      <Name>fhirmessageverification</Name>
+      <Version>0.0.1</Version>
+      <Packaging>module</Packaging>
+      <Resource Name="FHIRMV.PKG"/>
+      <CSPApplication CookiePath="/csp/fhirmessageverification/" DefaultTimeout="900" DeployPath="${cspdir}FHIRMESSAGEVERIFICATION\" GroupById="%ISCMgtPortal" MatchRoles=":%All" PasswordAuthEnabled="1" Recurse="1" ServeFiles="1" ServeFilesTimeout="3600" SourcePath="/csp" UnauthenticatedEnabled="0" Url="/csp/fhirmessageverification" UseSessionCookie="2"/>
+      <CSPApplication CookiePath="/fhirMessageVerification/" DefaultTimeout="900" DispatchClass="FHIRMV.Util" GroupById="%ISCMgtPortal" MatchRoles=":%All" PasswordAuthEnabled="1" Recurse="1" ServeFiles="1" ServeFilesTimeout="3600" UnauthenticatedEnabled="0" Url="/fhirMessageVerification" UseSessionCookie="2"/>
+      <SourcesRoot>src</SourcesRoot>
+    </Module>
+  </Document>
+</Export>
