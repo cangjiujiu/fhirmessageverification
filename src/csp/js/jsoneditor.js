@@ -14,7 +14,7 @@ function updateJSON(data) {
 }
 
 function showPath(path) {
-	console.log(path)
+	console.log(json)
     $('#path').text(path);
 }
 
@@ -58,6 +58,7 @@ $(document).ready(function() {
     });
     
     printJSON();
+    console.log(json)
     $('#editor').jsonEditor(json, { change: updateJSON, propertyclick: showPath });
 });
 
