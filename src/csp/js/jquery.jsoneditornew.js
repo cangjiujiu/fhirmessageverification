@@ -162,11 +162,7 @@
     }
     
     function construct(opt, json, root, path) {
-	     console.log("-------")
-	    console.log(json)
-	    console.log(opt)
-	     console.log(root)
-	      console.log(path)
+	     
         path = path || '';
         
         root.children('.item').remove();
@@ -278,15 +274,15 @@
                 //return false;
                 vResult=obj.replace('\r\n', '')
             }
-            // vResult=result.replace('\r\n', '')
+           
         } catch(e) {
-           // console.log('error：'+str+'!!!'+e);
+           
              vResult=result.replace('\r\n', '')
         }
        
 	                addNewValue(json, vResult);
                     construct(opt, json, root, path);
-                    opt.onchange(parse(stringify(JSON.parse($('#json').val()))));  
+                    opt.onchange(parse(stringify(Topt.original)));  
                 }
 	   })
 	
@@ -320,7 +316,7 @@
         }
 	                addNewValue(Tjson, vResult);
                     construct(Topt, Tjson, Troot, Tpath);
-                    Topt.onchange(parse(stringify(JSON.parse($('#json').val()))));  
+                    Topt.onchange(parse(stringify(Topt.original)));  
                 }
 	   })
 	  closePopup()
