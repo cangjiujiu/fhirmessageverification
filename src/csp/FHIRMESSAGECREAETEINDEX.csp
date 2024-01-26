@@ -197,8 +197,8 @@
 
 <div class="popup" id="popup">
         <div class="popup-inner"> <span class="popup-close" onclick="closePopup()">&times;</span>
-            <h2>ÇëÑ¡ÔñÐèÒªÌí¼ÓµÄ½Úµã</h2>
-            <!-- <p>×Ô¶¨Òåµ¯´°ÄÚÈÝ</p> -->
+            <h2>Please select the nodes that need to be added</h2>
+            <!-- <p>è‡ªå®šä¹‰å¼¹çª—å†…å®¹</p> -->
             <ul>
                 <li class="pop1" id="pop1"></li>
             </ul>
@@ -215,6 +215,8 @@
     <script src="js/jquery.jsoneditornew.js"></script>
     <script src="js/jsoneditor.js"></script>
     <script>
+    var clickpath=""
+    var clickname=""
     function getlist(){
 	     $.ajax('http://'+window.location.host+'/fhirMessageVerification/GetResourceNameList',
 	      {
@@ -227,7 +229,7 @@
                     var sel = document.getElementById("namelist");
                     for (var key in result)
                     {
-	                    var opt = new Option( result[key], result[key]);//µÚÒ»¸ö´ú±í±êÇ©ÄÚµÄÄÚÈÝ£¬µÚ¶þ¸ö´ú±ívalue
+	                    var opt = new Option( result[key], result[key]);//ç¬¬ä¸€ä¸ªä»£è¡¨æ ‡ç­¾å†…çš„å†…å®¹ï¼Œç¬¬äºŒä¸ªä»£è¡¨value
 				        sel.options.add(opt);
 	                 }
                           
@@ -254,7 +256,7 @@
                     //var newdata = JSON.parse(json1)
                     //console.log(result)
                            $('#json').val(JSON.stringify(result.json, undefined, 2))
-                       $('#editor').jsonEditor(JSON.parse($('#json').val()), { change: updateJSON, propertyclick: showPath });
+                           $('#editor').jsonEditor(JSON.parse($('#json').val()), { change: updateJSON, propertyclick: showPath });
                    // $('#result').html(syntaxHighlight(newdata, resultArray));
 
 
@@ -270,7 +272,139 @@
             document.getElementById("popup").style.display = "none";
         }
 getlist()
+function choosechange(path,name,this1)
+{
+	console.log("this1")
+	console.log(this1)
+   //$('#editor').jsonEditor(json, { change: updateJSON, propertyclick: showPath });
+   
+   // construct(opt,{"test":"123"},el,path+"."+name)
+    $.ajax('http://'+window.location.host+'/fhirMessageVerification/getResourceValue', {
 
+                method: 'POST',
+
+                data: {"name":$('#rType').val() ,"path":path ,"rType":$('#namelist').val()},
+                success: function (result) {
+	                 console.log( obj)
+	                console.log(typeof obj)
+	                try {
+            var obj=JSON.parse(result);
+            console.log(obj)
+            var obj=obj[0]
+            if(typeof obj == 'object' && obj ){
+                //return true;
+                vResult=obj
+            }else{
+                //return false;
+                vResult=obj.replace('\r\n', '')
+            }
+            console.log(vResult)
+            } catch(e) {
+           // console.log('errorï¼š'+str+'!!!'+e);
+             vResult=result.replace('\r\n', '')
+             
+             
+             if (path=="")
+   {
+	     
+	       el=$("input[title='"+name+"']")
+	       el.next().val(vResult)
+	       var opt={}
+	       opt.target=$('#editor') //$("div[id='editor']")
+	       opt.original=JSON.parse($('#json').val())
+	       opt.onchange=updateJSON
+	       choosepropertyChanged(opt,$("input[title='"+name+"']"),$('#rType').val())
+	       //èŽ·å–å¯¹åº”çš„value
+   }else{
+	       var el=$("div[data-path='"+path+"']").children('.property')
+	       el.next().val(vResult)
+	       var opt={}
+	       opt.target=$('#editor') //$("div[id='editor']")
+	       opt.original=JSON.parse($('#json').val())
+	       opt.onchange=updateJSON
+	       choosepropertyChanged(opt,el,$('#rType').val())
+	}
+             
+             
+        }}})
+}
+ function get(o, path) {
+
+
+            var del = arguments.length == 2;
+
+            if (path.indexOf('.') > -1) {
+                var diver = o,
+                    i = 0,
+                    parts = path.split('.');
+                for (var len = parts.length; i < len; i++) {
+                    diver = diver[parts[i]];
+                    console.log(diver)
+                }
+            } else {
+                diver = o[path];
+            }
+            return diver;
+        }
+function showPath(path) {
+	//tthis=$(this)
+	 //$('#test11').jsonEditor(json, { change: updateJSON, propertyclick: choosechange });
+	console.log(json)
+	console.log(path)
+	path=path.replace("']['",".")	
+     console.log(path)
+    path=path.replace("[", "")
+    path=path.replace("]", "")
+    path=path.replace("'", "")	
+    path=path.replace("'", "")	
+    console.log(path)
+    var tpath=""
+    var patharray=path.split('.')
+    for (i=0;i<patharray.length-1;i++)
+	        {
+		        tpath=tpath+patharray[i]+"."
+		    }
+		    name=patharray[patharray.length-1]
+		   
+		    if (tpath!="")
+		    {
+			  tpath= tpath.slice(0,-1)   
+			}
+    console.log(name,tpath)
+    //clickpath=tpath
+    //clickname=name
+	
+   // $('#path').text(path);
+   $.ajax('http://'+window.location.host+'/fhirMessageVerification/getChoose', {
+
+                method: 'POST',
+
+                data: {"rType":$('#namelist').val(),"path":path },
+                success: function (result) {
+	                console.log(result)
+	                
+                   result = JSON.parse(result)
+                   if (result.length!=0){
+                   console.log(result)
+                   var str='<select id="rType">'
+	               
+	               for (var key in result) 
+	                {
+		                str=str+'<option value="'+result[key]+'">'+result[key]+'</option>'
+		            }
+		             str=str+'</select><div><button id="test11" onclick="choosechange('+"'"+tpath+"'"+','+"'"+name+"'"+',11'+')">ok</button></div>'
+		            console.log(str) 
+	                showPopup(str);
+	               // $('#test11').jsonEditor(json, { change: updateJSON, propertyclick:  updateJSON })
+	                }
+
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            })
+     
+}
 
     </script>
 </body>
