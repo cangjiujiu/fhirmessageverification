@@ -11,13 +11,64 @@ XData UrlMap [ XMLNamespace = "http://www.bjgoodwill.com/urlmap" ]
 
   
   <Route Url="/valid" Method="POST" Call="valid" />
-   <Route Url="/getJSON" Method="POST" Call="getJSON" />
-   <Route Url="/getOtherName" Method="POST" Call="getOtherName" />
-    <Route Url="/getResourceValue" Method="POST" Call="getResourceValue" />
-     <Route Url="/GetResourceNameList" Method="POST" Call="GetResourceNameList" />
+  <Route Url="/getJSON" Method="POST" Call="getJSON" />
+  <Route Url="/getOtherName" Method="POST" Call="getOtherName" />
+  <Route Url="/getResourceValue" Method="POST" Call="getResourceValue" />
+  <Route Url="/GetResourceNameList" Method="POST" Call="GetResourceNameList" />
+  <Route Url="/getChoose" Method="POST" Call="getChoose" />
     
  
 </Routes>
+}
+
+ClassMethod getChoose() As %Status
+{
+	set result=[]
+   	set path=%request.Data("path",1)
+	//set path="['effective']"
+	//set resourceType="MedicationAdministration"
+	set resourceType=%request.Data("rType",1)
+	set path=$replace(path,"']['",".")
+	set path=$translate(path,"'][","")
+	if path["."{
+	  set tpath=$p(path,".",1,*-1)	
+	  //w path,!
+	  set type=..getFHIRTYPE(resourceType,tpath)
+	 // w type,!
+	  set pname=$p(path,".",*)	
+	  //w pname,!
+	}else{
+		set type=resourceType
+	    set pname=$p(path,".",*)	
+	}
+
+	//w pname,",",type,!
+	set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	set jsonType=$$$GetPropertyJsonType(schema,type,pname)
+	//w jsonType,!
+	set array=[]
+	//if (jsonType="c")
+	//{
+	   	//获取index及可选择列
+	   	set tindex=$$$GetPropertyIndex(schema,type,pname)
+	   	
+	    for i=1:1:$ll(@schema.TiGbl@(type, "*pn"))
+	    {
+		   set name=$lg(@schema.TiGbl@(type, "*pn"),i)
+		   set index=$$$GetPropertyIndex(schema,type,name)
+		   if (index=tindex)&&(name'=pname)
+		   {
+			Do array.%Push(name)   
+		    }
+	     }
+	 //Quit array
+	//}
+	w array.%ToJSON(),!
+	Quit $$$OK
+}
+
+ClassMethod getList(resourceType, isrequate, jType) As %Status
+{
 }
 
 ClassMethod getJSON() As %Status
@@ -52,11 +103,12 @@ ClassMethod getJSON() As %Status
 			    Do result.%Set(tPropName,"可选择")	 
 		     }elseif(tType="o")
 		     {
-			      //w resourceType,"," ,tPropName
-			      //set jname=$$$GetPropertyFHIRType(schema, resourceType, tPropName)   
+			     // w resourceType,"," ,tPropName
+			      set jname=$$$GetPropertyFHIRType(schema, resourceType, tPropName)   
 			      //w jname,!
-			      //set ob= ..getResourcrDetail(jname)
-			      set ob={}
+			      set ob= ..getResourcrDetail(jname)
+			     // w ob.%ToJSON(),!
+			      //set ob={}
 			     // w ..getResourcrDetail(jname)
 			      //Do ob.%Set(jname,"")
 			      //w $$$IsPropertyArray(schema, resourceType, tPropName)=1
@@ -78,8 +130,6 @@ ClassMethod getJSON() As %Status
 		// See if any of the variants of this property was present		
 		
 	}
-	//W result.%ToJSON(),!
-	//w index.%ToJSON(),!
 	set rResult={}
 	set rResult.json=result
 	set rResult.index=index
@@ -224,11 +274,6 @@ ClassMethod getIndexList(json As %DynamicObject, resourceType, path) As %Dynamic
      Quit index
 }
 
-ClassMethod getpList() As %Status
-{
-   ///获取当前已添加节点外其他节点
-}
-
 /// 获取必要节点
 ClassMethod getVlist() As %Status
 {
@@ -258,10 +303,8 @@ ClassMethod getResourceValue() As %Status
 	}elseif(type="o")
    {
 	set jname=$$$GetPropertyFHIRType(schema, resourceType, name)   
-	  // w jname,!
+	   //w jname,!
 	   set ob= ..getResourcrDetail(jname)
-	   
-	   ///获取下一节点的
 	   if ($$$IsPropertyArray(schema, resourceType, name)=1)
 	   {
 		set ar=[]
@@ -288,15 +331,10 @@ ClassMethod getResourcrDetail(resourceType)
    set result={}
 	
 	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
-	 //set resourceType="MessageDefinition"
-	 //set result.resourceType=resourceType
-	 //w $ll(@schema.TiGbl@(resourceType, "*pn"))
 	 for i=1:1:$ll(@schema.TiGbl@(resourceType, "*pn"))
 	 {
 		 set name=$lg(@schema.TiGbl@(resourceType, "*pn"),i)
-		 //w $$$GetPropertyIndex(schema, resourceType, name),!
-	    // w name,":",$$$GetPropertyFHIRType(schema, resourceType, name),":",$$$GetPropertyJsonType(schema, resourceType, name),":",$$$IsPropertyArray(schema, resourceType, name),":",$$$IsPropertyRequired(schema, resourceType, name),!
-	     if ($$$IsPropertyRequired(schema, resourceType, name)=1)
+		 if ($$$IsPropertyRequired(schema, resourceType, name)=1)
 	     {
 		     
 		     //w 11,!
@@ -325,6 +363,20 @@ ClassMethod getResourcrDetail(resourceType)
     // w result.%ToJSON(),!
 	// Quit $$$OK
    Quit result
+}
+
+ClassMethod getZY(resourceType) As %Status
+{
+	//W "---",!
+	//W resourceType,!
+	set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+   	Set tPropName = $$$NextRequiredProperty(schema, resourceType, "")
+   	//W resourceType,!
+	WHILE tPropName'="" {
+			Set tPropName = $$$NextRequiredProperty(schema, resourceType, tPropName)
+		    w tPropName,!
+		    Quit
+	}
 }
 
 ClassMethod valid() As %Status
