@@ -162,6 +162,11 @@
     }
     
     function construct(opt, json, root, path) {
+	     console.log("-------")
+	    console.log(json)
+	    console.log(opt)
+	     console.log(root)
+	      console.log(path)
         path = path || '';
         
         root.children('.item').remove();
@@ -186,6 +191,7 @@
 
             assignType(item, json[key]);
 
+            //property.change(choosepropertyChanged(opt));
             property.change(propertyChanged(opt));
             value.change(valueChanged(opt));
             property.click(propertyClicked(opt));
@@ -216,7 +222,7 @@
 		             str=str+'</select><div><button onclick="updateJSON1()">ok</button></div>'
 		             
 	                showPopup(str);
-	                //console.log(result)
+	               /// console.log(path)
 	                Topt=opt
 	                 Tjson=json
 	                 Troot=root
@@ -235,12 +241,10 @@
         {
 	        
 	        addListAppender(root, function () {
-		        console.log(path)
+		        //console.log(path)
 		        var temppath=path
 		        var patharray=temppath.split('.')
-	        console.log("111111")
-	        console.log(patharray.length)
-	         console.log(patharray)
+	     
 	        var name=""
 	        var tpath=""
 	        for (i=0;i<patharray.length-1;i++)
@@ -248,12 +252,12 @@
 		        tpath=tpath+patharray[i]+"."
 		    }
 		    name=patharray[patharray.length-1]
-		    console.log(tpath,",",name)
+		   
 		    if (tpath!="")
 		    {
 			  tpath= tpath.slice(0,-1)   
 			}
-			console.log(tpath,",",name)
+			
 	            //path 截取为path的前几位
 	          $.ajax('http://'+window.location.host+'/fhirMessageVerification/getResourceValue', {
 
@@ -279,10 +283,10 @@
            // console.log('error：'+str+'!!!'+e);
              vResult=result.replace('\r\n', '')
         }
-        console.log(vResult)
+       
 	                addNewValue(json, vResult);
                     construct(opt, json, root, path);
-                    opt.onchange(parse(stringify(opt.original)));  
+                    opt.onchange(parse(stringify(JSON.parse($('#json').val()))));  
                 }
 	   })
 	
@@ -316,20 +320,38 @@
         }
 	                addNewValue(Tjson, vResult);
                     construct(Topt, Tjson, Troot, Tpath);
-                    Topt.onchange(parse(stringify(Topt.original)));  
+                    Topt.onchange(parse(stringify(JSON.parse($('#json').val()))));  
                 }
 	   })
 	  closePopup()
 	  }
     function updateParents(el, opt) {
+	    console.log(el)
+	    console.log(opt.target)
+	    console.log($(this))
         $(el).parentsUntil(opt.target).each(function() {
             var path = $(this).data('path');
+            //console.log(path)
             path = (path ? path + '.' : path) + $(this).children('.property').val();
+            // console.log(path)
             var val = stringify(def(opt.original, path, null));
+            // console.log(val)
             $(this).children('.value').val(val).attr('title', val);
         });
     }
-
+function updateParents2(el, opt,path,val) {
+	    //console.log(el)
+	    //console.log(opt.target)
+        $(el).parentsUntil(opt.target).each(function() {
+            //var path = path
+           // console.log(path)
+            //path = (path ? path + '.' : path) + $(this).children('.property').val();
+             //console.log(path)
+           // var val = stringify(def(opt.original, path, null));
+             //console.log(val)
+            $(this).children('.value').val(val).attr('title', val);
+        });
+    }
     function propertyClicked(opt) {
         return function() {
             var path = $(this).parent().data('path');            
@@ -342,14 +364,16 @@
     }
     
     function propertyChanged(opt) {
+	    
         return function() {
             var path = $(this).parent().data('path'),
                 val = parse($(this).next().val()),
+                
                 newKey = $(this).val(),
                 oldKey = $(this).attr('title');
-
+                
             $(this).attr('title', newKey);
-
+            //console.log((path ? path + '.' : '') )
             feed(opt.original, (path ? path + '.' : '') + oldKey);
             if (newKey) feed(opt.original, (path ? path + '.' : '') + newKey, val);
 
@@ -360,9 +384,31 @@
             opt.onchange(parse(stringify(opt.original)));
         };
     }
+    function choosepropertyChanged(opt,this1,new1) {
+	    
+            var path = this1.parent().data('path'),
+                val = parse(this1.next().val()),
+                newKey = new1,
+               
+                oldKey = this1.attr('title');
+             //console.log(val)
+              this1.val(newKey)
+              this1.attr('title', newKey);
+            //console.log(path)
+            feed(opt.original, (path ? path + '.' : '') + oldKey);
+            if (newKey) feed(opt.original, (path ? path + '.' : '') + newKey, val);
 
+            updateParents(this, opt);
+
+            if (!newKey) this1.parent().remove();
+            
+            opt.onchange(parse(stringify(opt.original)));
+        
+    }
     function valueChanged(opt) {
+	   
         return function() {
+	         //console.log("-!!!!")
             var key = $(this).prev().val(),
                 val = parse($(this).val() || 'null'),
                 item = $(this).parent(),
@@ -409,4 +455,5 @@
  function closePopup() {
             document.getElementById("popup").style.display = "none";
         }
+        
         //console.log(window.location.host)
