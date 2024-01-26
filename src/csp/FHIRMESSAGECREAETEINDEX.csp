@@ -238,11 +238,7 @@
                     console.log(err);
                 }
             })
-
-
-        }
-	    
-	
+    }
     function getJSONTOSTRING() {
             json1 = $('#json').val()
             resultArray=[]
@@ -274,11 +270,7 @@
 getlist()
 function choosechange(path,name,this1)
 {
-	console.log("this1")
-	console.log(this1)
-   //$('#editor').jsonEditor(json, { change: updateJSON, propertyclick: showPath });
-   
-   // construct(opt,{"test":"123"},el,path+"."+name)
+	
     $.ajax('http://'+window.location.host+'/fhirMessageVerification/getResourceValue', {
 
                 method: 'POST',
@@ -298,10 +290,11 @@ function choosechange(path,name,this1)
                 //return false;
                 vResult=obj.replace('\r\n', '')
             }
-            console.log(vResult)
+          
             } catch(e) {
            // console.log('error：'+str+'!!!'+e);
              vResult=result.replace('\r\n', '')
+            }
              
              
              if (path=="")
@@ -313,6 +306,7 @@ function choosechange(path,name,this1)
 	       opt.target=$('#editor') //$("div[id='editor']")
 	       opt.original=JSON.parse($('#json').val())
 	       opt.onchange=updateJSON
+	       opt.propertyclick=showPath 
 	       choosepropertyChanged(opt,$("input[title='"+name+"']"),$('#rType').val())
 	       //获取对应的value
    }else{
@@ -322,11 +316,14 @@ function choosechange(path,name,this1)
 	       opt.target=$('#editor') //$("div[id='editor']")
 	       opt.original=JSON.parse($('#json').val())
 	       opt.onchange=updateJSON
+	       opt.propertyclick=showPath 
 	       choosepropertyChanged(opt,el,$('#rType').val())
 	}
+                 //$('#json').val(JSON.stringify(result.json, undefined, 2))
+                 $('#editor').jsonEditor(JSON.parse($('#json').val()), { change: updateJSON, propertyclick: showPath });
+                        closePopup()
              
-             
-        }}})
+        }})
 }
  function get(o, path) {
 
@@ -393,7 +390,7 @@ function showPath(path) {
 		                str=str+'<option value="'+result[key]+'">'+result[key]+'</option>'
 		            }
 		             str=str+'</select><div><button id="test11" onclick="choosechange('+"'"+tpath+"'"+','+"'"+name+"'"+',11'+')">ok</button></div>'
-		            console.log(str) 
+		            
 	                showPopup(str);
 	               // $('#test11').jsonEditor(json, { change: updateJSON, propertyclick:  updateJSON })
 	                }
