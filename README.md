@@ -28,8 +28,18 @@ Message nodes that do not meet the requirements will be displayed in red, and wh
  ![image](https://github.com/cangjiujiu/fhirmessageverification/assets/124135718/cf6bda5e-a3c9-4017-87ba-f663981cbc9a)
 
  2.1 Select the message type you want to generate
+ 
  2.2 Click the OK button
- 2.3 Click button  to add a node
+ 
+ 2.3 Click button  to Select the node name that needs to be added
+
+ ![image](https://github.com/cangjiujiu/fhirmessageverification/assets/124135718/cb82f5a3-b370-4db5-8f00-33d6ab905375)
+
+2.4 Select the node name that needs to be added.
+
+2.5 If you change the node to a selectable node.You can click on the node name
+
+![image](https://github.com/cangjiujiu/fhirmessageverification/assets/124135718/4d2186f6-ebb3-4b38-ac57-76028cfa4005)
 
  ps ：This feature still needs to be tested
  
