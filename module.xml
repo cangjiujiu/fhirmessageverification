@@ -3,7 +3,7 @@
   <Document name="fhirmessageverification.ZPM">
     <Module>
       <Name>fhirmessageverification</Name>
-      <Version>0.0.2</Version>
+      <Version>0.0.4</Version>
       <Packaging>module</Packaging>
       <Resource Name="FHIRMV.PKG"/>
       <CSPApplication CookiePath="/csp/fhirmessageverification/" DefaultTimeout="900" DeployPath="${cspdir}FHIRMESSAGEVERIFICATION\" GroupById="%ISCMgtPortal" MatchRoles=":%All" PasswordAuthEnabled="1" Recurse="1" ServeFiles="1" ServeFilesTimeout="3600" SourcePath="/csp" UnauthenticatedEnabled="0" Url="/csp/fhirmessageverification" UseSessionCookie="2"/>
