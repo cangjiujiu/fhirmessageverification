@@ -66,7 +66,7 @@
     // Example:
     //      feed({}, 'foo.bar.baz', 10);    // returns { foo: { bar: { baz: 10 } } }
     function feed(o, path, value) {
-	   // console.log(path)
+	    console.log(path)
         var del = arguments.length == 2;
         
         if (path.indexOf('.') > -1) {
@@ -104,7 +104,7 @@
     function parse(str) {
         var res;
         try { res = JSON.parse(str); }
-        catch (e) { res = null; error('JSON parse failed.'); }
+        catch (e) { res = str; error('JSON parse failed.'); }
         return res;
     }
 
@@ -172,7 +172,7 @@
 
             var item     = $('<div>',   { 'class': 'item', 'data-path': path }),
                 property =   $(opt.propertyElement || '<input>', { 'class': 'property' }),
-                value    =   $(opt.valueElement || '<input>', { 'class': 'value'    });
+                value    =   $(opt.valueElement || '<input>', { 'class': 'value','onclick':'getValueType('+"'"+path+"'"+','+"'"+key+"'"+')'    });
 
             if (isObject(json[key]) || isArray(json[key])) {
                 addExpander(item);
@@ -273,6 +273,7 @@
             }else{
                 //return false;
                 vResult=obj.replace('\r\n', '')
+                
             }
            
         } catch(e) {
@@ -293,7 +294,7 @@
     }
     function updateJSON1()
     {
-	   // console.log("??")
+	    //console.log("??")
 	   $.ajax('http://'+window.location.host+'/fhirMessageVerification/getResourceValue', {
 
                 method: 'POST',
@@ -322,9 +323,7 @@
 	  closePopup()
 	  }
     function updateParents(el, opt) {
-	    console.log(el)
-	    console.log(opt.target)
-	    console.log($(this))
+	    
         $(el).parentsUntil(opt.target).each(function() {
             var path = $(this).data('path');
             //console.log(path)
@@ -352,7 +351,7 @@ function updateParents2(el, opt,path,val) {
         return function() {
             var path = $(this).parent().data('path');            
             var key = $(this).attr('title');
-
+           // console.log(propertyClicked)
             var safePath = path ? path.split('.').concat([key]).join('\'][\'') : key;
             
             opt.onpropertyclick('[\'' + safePath + '\']');
@@ -369,7 +368,7 @@ function updateParents2(el, opt,path,val) {
                 oldKey = $(this).attr('title');
                 
             $(this).attr('title', newKey);
-            //console.log((path ? path + '.' : '') )
+            console.log("path"+path)
             feed(opt.original, (path ? path + '.' : '') + oldKey);
             if (newKey) feed(opt.original, (path ? path + '.' : '') + newKey, val);
 
@@ -402,6 +401,7 @@ function updateParents2(el, opt,path,val) {
        
     }
     function valueChanged(opt) {
+	   // console.log("valuiechange")
 	   
         return function() {
 	         //console.log("-!!!!")
