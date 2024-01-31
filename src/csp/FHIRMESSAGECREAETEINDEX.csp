@@ -277,31 +277,36 @@ function choosechange(path,name,this1)
 
                 data: {"name":$('#rType').val() ,"path":path ,"rType":$('#namelist').val()},
                 success: function (result) {
-	                 console.log( obj)
-	                console.log(typeof obj)
+	                // console.log( "??"+result)
+	                //console.log(typeof obj)
 	                try {
             var obj=JSON.parse(result);
             console.log(obj)
             var obj=obj[0]
-            if(typeof obj == 'object' && obj ){
+            if(typeof obj == 'object' && obj )
+              {   
                 //return true;
-                vResult=obj
-            }else{
+                   vResult=obj
+                }else{
                 //return false;
                 vResult=obj.replace('\r\n', '')
-            }
+                
+                }
           
             } catch(e) {
-           // console.log('error：'+str+'!!!'+e);
+            // console.log('error：'+str+'!!!'+e);
              vResult=result.replace('\r\n', '')
+             console.log(vResult)
             }
              
              
              if (path=="")
    {
-	     
+	   console.log("name:"+name)
+	       
 	       el=$("input[title='"+name+"']")
 	       el.next().val(vResult)
+	        console.log(el)
 	       var opt={}
 	       opt.target=$('#editor') //$("div[id='editor']")
 	       opt.original=JSON.parse($('#json').val())
@@ -310,6 +315,7 @@ function choosechange(path,name,this1)
 	       choosepropertyChanged(opt,$("input[title='"+name+"']"),$('#rType').val())
 	       //获取对应的value
    }else{
+  console.log(vResult)
 	       var el=$("div[data-path='"+path+"']").children('.property')
 	       el.next().val(vResult)
 	       var opt={}
@@ -324,6 +330,51 @@ function choosechange(path,name,this1)
                         closePopup()
              
         }})
+}
+function getValueType(path,value)
+{
+   	console.log(value)
+   	if (path=="")
+   	{
+	 path =value  	
+	}else{
+		path =path+"."+value  	
+	}
+   	  $.ajax('http://'+window.location.host+'/fhirMessageVerification/getValueType', {
+	   	  method: 'POST',
+
+                data: {"path":path,"rType":$('#namelist').val()},
+                success: function (result) {
+	                console.log(result)
+	              if (result!="")
+	              {
+		              
+		              result= JSON.parse(result)
+	                  var str='<select id="vType">'
+	               
+	                 for (var key in result) 
+	                 {
+		                str=str+'<option value='+result[key]+'>'+result[key]+'</option>'
+		             }
+		             str=str+'</select><div><button onclick="changevalue('+"'"+path+"'"+')">ok</button></div>'   
+		             showPopup(str);
+		              
+		           }    
+	                
+	            }
+   	  })
+}
+function changevalue(path)
+{
+	var value=$('#vType').val()
+	console.log(value)
+	if (value=='true'){value=true}
+	if (value=='false'){value=false}
+	console.log(value)
+	ob=feed(JSON.parse($('#json').val()),path,value)
+	$('#json').val(JSON.stringify(ob))
+	 $('#editor').jsonEditor(JSON.parse($('#json').val()), { change: updateJSON, propertyclick: showPath });
+   closePopup()
 }
  function get(o, path) {
 
@@ -346,8 +397,8 @@ function choosechange(path,name,this1)
 function showPath(path) {
 	//tthis=$(this)
 	 //$('#test11').jsonEditor(json, { change: updateJSON, propertyclick: choosechange });
-	console.log(json)
-	console.log(path)
+	//console.log(json)
+	//console.log(path)
 	path=path.replace("']['",".")	
      console.log(path)
     path=path.replace("[", "")
