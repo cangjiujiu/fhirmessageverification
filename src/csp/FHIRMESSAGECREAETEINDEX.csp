@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="css/jsoneditor.css"/>
    
 
-    <title>FHIR|R4 MESSAGE CREATE</title>
+    <title>FHIR MESSAGE CREATE</title>
 
     <style>
         body {
@@ -180,14 +180,26 @@
 
 <body>
     <h1>
-        FHIR|R4 MESSAGE CREATE
+        FHIR MESSAGE CREATE
     </h1>
     
   
 
     <div id="rest">
+    <div>
+        <select id="versionlist" onChange="getlist()">
+          
+           <option value="hl7.fhir.r4.core@4.0.1">r4</option>
+           <option value="hl7.fhir.r5.core@5.0.0">r5</option>
+            <option value="hl7.fhir.r3.core@3.0.2">r3</option>
+         </select>
+          <!--<button onclick="getlist()">ok</button>-->
+    </div>
+    <div>
         <select id="namelist"></select>
+         
         <button onclick="getJSONTOSTRING()">ok</button>
+        </div>
     </div>
     <pre id="path"></pre>
     <div id="editor" class="json-editor"></div>
@@ -223,7 +235,7 @@
 
                 method: 'POST',
 
-                data: {  },
+                data: { "version":$('#versionlist').val() },
                 success: function (result) {
                    result = JSON.parse(result)
                     var sel = document.getElementById("namelist");
@@ -246,7 +258,7 @@
 
                 method: 'POST',
 
-                data: {"rType":$('#namelist').val()  },
+                data: {"rType":$('#namelist').val(),"version":$('#versionlist').val()  },
                 success: function (result) {
                    result = JSON.parse(result)
                     //var newdata = JSON.parse(json1)
@@ -275,7 +287,7 @@ function choosechange(path,name,this1)
 
                 method: 'POST',
 
-                data: {"name":$('#rType').val() ,"path":path ,"rType":$('#namelist').val()},
+                data: {"name":$('#rType').val() ,"path":path ,"rType":$('#namelist').val(),"version":$('#versionlist').val()},
                 success: function (result) {
 	                // console.log( "??"+result)
 	                //console.log(typeof obj)
@@ -343,7 +355,7 @@ function getValueType(path,value)
    	  $.ajax('http://'+window.location.host+'/fhirMessageVerification/getValueType', {
 	   	  method: 'POST',
 
-                data: {"path":path,"rType":$('#namelist').val()},
+                data: {"path":path,"rType":$('#namelist').val(),"version":$('#versionlist').val() },
                 success: function (result) {
 	                console.log(result)
 	              if (result!="")
@@ -427,9 +439,9 @@ function showPath(path) {
 
                 method: 'POST',
 
-                data: {"rType":$('#namelist').val(),"path":path },
+                data: {"rType":$('#namelist').val(),"path":path,"version":$('#versionlist').val() },
                 success: function (result) {
-	                console.log(result)
+	               
 	                
                    result = JSON.parse(result)
                    if (result.length!=0){
