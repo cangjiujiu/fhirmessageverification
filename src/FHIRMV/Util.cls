@@ -16,18 +16,60 @@ XData UrlMap [ XMLNamespace = "http://www.bjgoodwill.com/urlmap" ]
   <Route Url="/getResourceValue" Method="POST" Call="getResourceValue" />
   <Route Url="/GetResourceNameList" Method="POST" Call="GetResourceNameList" />
   <Route Url="/getChoose" Method="POST" Call="getChoose" />
-    
+     <Route Url="/getValueType" Method="POST" Call="getValueType" />
  
 </Routes>
+}
+
+ClassMethod getValueType() As %Status
+{
+	set path=%request.Data("path",1)
+	set rtype=%request.Data("rType",1)
+	set version=%request.Data("version",1)
+	if path["."{
+	  set tpath=$p(path,".",1,*-1)	
+	  set type=..getFHIRTYPE(rtype,tpath,version)
+	  set pname=$p(path,".",*)	
+	}else{
+		set type=rtype
+	    set pname=$p(path,".",*)	
+	}
+	set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
+	set jsonType=$$$GetPropertyJsonType(schema,type,pname)
+	//w jsonType,!
+	if (jsonType="s")
+	{
+		
+	   if ($$$IsPropertyValueSet(schema,type, pname)=1)
+	   {
+		   set result=[]
+		    SET temp=$$$NextValueInPropertyValueSet(schema,type, pname,"")
+		    while temp'=""
+		    {
+			     Do result.%Push(temp)
+			     SET temp=$$$NextValueInPropertyValueSet(schema,type, pname,temp)
+			 }
+			 w result.%ToJSON()
+	  }else{
+	      SET result=""	   
+		}	
+    }elseif jsonType="b"
+   {
+	   
+	 set result=[true,false]
+	 w result.%ToJSON(),! 
+	}
+	//w jsonType,!
+		Quit $$$OK
 }
 
 ClassMethod getChoose() As %Status
 {
 	set result=[]
    	set path=%request.Data("path",1)
-	//set path="['effective']"
-	//set resourceType="MedicationAdministration"
+	set version=%request.Data("version",1)
 	set resourceType=%request.Data("rType",1)
+	
 	set path=$replace(path,"']['",".")
 	set path=$translate(path,"'][","")
 	if path["."{
@@ -43,12 +85,11 @@ ClassMethod getChoose() As %Status
 	}
 
 	//w pname,",",type,!
-	set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
 	set jsonType=$$$GetPropertyJsonType(schema,type,pname)
 	//w jsonType,!
 	set array=[]
-	//if (jsonType="c")
-	//{
+	
 	   	//获取index及可选择列
 	   	set tindex=$$$GetPropertyIndex(schema,type,pname)
 	   	
@@ -62,8 +103,9 @@ ClassMethod getChoose() As %Status
 		    }
 	     }
 	 //Quit array
-	//}
+	
 	w array.%ToJSON(),!
+	
 	Quit $$$OK
 }
 
@@ -76,10 +118,11 @@ ClassMethod getJSON() As %Status
 	set index={}
 	set result={}
 	//set rtype=%request.Data("rType",1)
-	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
-	 set resourceType=%request.Data("rType",1)
-	 set result.resourceType=resourceType
-	 	Set tPropName = $$$NextRequiredProperty(schema, resourceType, "")
+	set version=%request.Data("version",1)
+	set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
+	set resourceType=%request.Data("rType",1)
+	set result.resourceType=resourceType
+	Set tPropName = $$$NextRequiredProperty(schema, resourceType, "")
 	WHILE tPropName'="" {
 	    set tindex=$$$GetPropertyIndex(schema, resourceType, tPropName)
 	    Do index.%Set(tindex,"2")  //必要节点
@@ -87,17 +130,15 @@ ClassMethod getJSON() As %Status
 		//w tType,!
 		if (tType="s")  //string
 		{
-			     
-			     // w "123",!
-			     //W $$$IsPropertyValueSet(schema,resourceType, name),!
 			     if ($$$IsPropertyValueSet(schema,resourceType, tPropName)=1)
 			     {
-				    // w $$$NextValueInPropertyValueSet(schema,resourceType, tPropName,""),!
-				    // w $$$NextValueInPropertyValueSet(schema,resourceType, name,""),!  //diyige
 				     Do result.%Set(tPropName,$$$NextValueInPropertyValueSet(schema,resourceType, tPropName,""))
 				     }else{Do result.%Set(tPropName,"")}
-			   //  w "---",!
-			 }elseif(tType="c")
+			 }  elseif(tType="b")
+			 {
+				 //可选择的 
+			    w "true or false" 
+		     }  elseif(tType="c")
 			 {
 				 //可选择的 
 			    Do result.%Set(tPropName,"可选择")	 
@@ -106,7 +147,7 @@ ClassMethod getJSON() As %Status
 			     // w resourceType,"," ,tPropName
 			      set jname=$$$GetPropertyFHIRType(schema, resourceType, tPropName)   
 			      //w jname,!
-			      set ob= ..getResourcrDetail(jname)
+			      set ob= ..getResourcrDetail(jname,version)
 			     // w ob.%ToJSON(),!
 			      //set ob={}
 			     // w ..getResourcrDetail(jname)
@@ -142,7 +183,7 @@ ClassMethod test() As %Status
 {
 	set result={}
 	
-	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema("hl7.fhir.r4.core@4.0.1")
 	 set resourceType="Patient"
 	 set result.resourceType=resourceType
 	 //w $ll(@schema.TiGbl@(resourceType, "*pn"))
@@ -177,10 +218,10 @@ ClassMethod test() As %Status
 	 Quit $$$OK
 }
 
-ClassMethod getFHIRTYPE(resourceType, path) As %Status
+ClassMethod getFHIRTYPE(resourceType, path, version) As %Status
 {
 	//w 11,!
-	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
 	 set ll=$l(path,".")
 	 //w path,!
 	 //w ll,!
@@ -197,10 +238,23 @@ ClassMethod getFHIRTYPE(resourceType, path) As %Status
 
 ClassMethod GetResourceNameList() As %Status
 {
-  set result=["Account","ActivityDefinition","AdverseEvent","AllergyIntolerance","Appointment","AppointmentResponse","AuditEvent","Basic","Binary","BiologicallyDerivedProduct","BodyStructure","Bundle","CapabilityStatement","CarePlan","CareTeam","CatalogEntry","ChargeItem","ChargeItemDefinition","Claim","ClaimResponse","ClinicalImpression","CodeSystem","Communication","CommunicationRequest","CompartmentDefinition","Composition","ConceptMap","Condition","Consent","Contract","Coverage","CoverageEligibilityRequest","CoverageEligibilityResponse","DetectedIssue","Device","DeviceDefinition","DeviceMetric","DeviceRequest","DeviceUseStatement","DiagnosticReport","DocumentManifest","DocumentReference","EffectEvidenceSynthesis","Encounter","Endpoint","EnrollmentRequest","EnrollmentResponse","EpisodeOfCare","EventDefinition","Evidence","EvidenceVariable","ExampleScenario","ExplanationOfBenefit","FamilyMemberHistory","Flag","Goal","GraphDefinition","Group","GuidanceResponse","HealthcareService","ImagingStudy","Immunization","ImmunizationEvaluation","ImmunizationRecommendation","ImplementationGuide","InsurancePlan","Invoice","Library","Linkage","List","Location","Measure","MeasureReport","Media","Medication","MedicationAdministration","MedicationDispense","MedicationKnowledge","MedicationRequest","MedicationStatement","MedicinalProduct","MedicinalProductAuthorization","MedicinalProductContraindication","MedicinalProductIndication","MedicinalProductIngredient","MedicinalProductInteraction","MedicinalProductManufactured","MedicinalProductPackaged","MedicinalProductPharmaceutical","MedicinalProductUndesirableEffect","MessageDefinition","MessageHeader","MolecularSequence","NamingSystem","NutritionOrder","Observation","ObservationDefinition","OperationDefinition","OperationOutcome","Organization","OrganizationAffiliation","Patient","PaymentNotice","PaymentReconciliation","Person","PlanDefinition","Practitioner","PractitionerRole","Procedure","Provenance","Questionnaire","QuestionnaireResponse","RelatedPerson","RequestGroup","ResearchDefinition","ResearchElementDefinition","ResearchStudy","ResearchSubject","RiskAssessment","RiskEvidenceSynthesis","Rsrc","Schedule","SearchParameter","ServiceRequest","Slot","Specimen","SpecimenDefinition","StructureDefinition","StructureMap","Subscription","Substance","SubstanceNucleicAcid","SubstancePolymer","SubstanceProtein","SubstanceReferenceInformation","SubstanceSourceMaterial","SubstanceSpecification","SupplyDelivery","SupplyRequest","Task","TerminologyCapabilities","TestReport","TestScript","ValueSet","VerificationResult","VisionPrescription"]
-
- 
+	set version=%request.Data("version",1)
+	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
+  set result=[]  //["Account","ActivityDefinition","AdverseEvent","AllergyIntolerance","Appointment","AppointmentResponse","AuditEvent","Basic","Binary","BiologicallyDerivedProduct","BodyStructure","Bundle","CapabilityStatement","CarePlan","CareTeam","CatalogEntry","ChargeItem","ChargeItemDefinition","Claim","ClaimResponse","ClinicalImpression","CodeSystem","Communication","CommunicationRequest","CompartmentDefinition","Composition","ConceptMap","Condition","Consent","Contract","Coverage","CoverageEligibilityRequest","CoverageEligibilityResponse","DetectedIssue","Device","DeviceDefinition","DeviceMetric","DeviceRequest","DeviceUseStatement","DiagnosticReport","DocumentManifest","DocumentReference","EffectEvidenceSynthesis","Encounter","Endpoint","EnrollmentRequest","EnrollmentResponse","EpisodeOfCare","EventDefinition","Evidence","EvidenceVariable","ExampleScenario","ExplanationOfBenefit","FamilyMemberHistory","Flag","Goal","GraphDefinition","Group","GuidanceResponse","HealthcareService","ImagingStudy","Immunization","ImmunizationEvaluation","ImmunizationRecommendation","ImplementationGuide","InsurancePlan","Invoice","Library","Linkage","List","Location","Measure","MeasureReport","Media","Medication","MedicationAdministration","MedicationDispense","MedicationKnowledge","MedicationRequest","MedicationStatement","MedicinalProduct","MedicinalProductAuthorization","MedicinalProductContraindication","MedicinalProductIndication","MedicinalProductIngredient","MedicinalProductInteraction","MedicinalProductManufactured","MedicinalProductPackaged","MedicinalProductPharmaceutical","MedicinalProductUndesirableEffect","MessageDefinition","MessageHeader","MolecularSequence","NamingSystem","NutritionOrder","Observation","ObservationDefinition","OperationDefinition","OperationOutcome","Organization","OrganizationAffiliation","Patient","PaymentNotice","PaymentReconciliation","Person","PlanDefinition","Practitioner","PractitionerRole","Procedure","Provenance","Questionnaire","QuestionnaireResponse","RelatedPerson","RequestGroup","ResearchDefinition","ResearchElementDefinition","ResearchStudy","ResearchSubject","RiskAssessment","RiskEvidenceSynthesis","Rsrc","Schedule","SearchParameter","ServiceRequest","Slot","Specimen","SpecimenDefinition","StructureDefinition","StructureMap","Subscription","Substance","SubstanceNucleicAcid","SubstancePolymer","SubstanceProtein","SubstanceReferenceInformation","SubstanceSourceMaterial","SubstanceSpecification","SupplyDelivery","SupplyRequest","Task","TerminologyCapabilities","TestReport","TestScript","ValueSet","VerificationResult","VisionPrescription"]
+  set name=$o(@schema.TiGbl@(""))
+  
+  while name'=""
+  {
+	  if (schema.IsValidResourceType(name)=1){
+	  
+		  //w $lg(@schema.TiGbl@(name, "*pn"),i),!
+	      Do result.%Push(name)
+	  }
+	  set name=$o(@schema.TiGbl@(name))
+}
+  //w test,!
   w result.%ToJSON(),!
+ // w result.%Size()
   Quit $$$OK
 }
 
@@ -208,17 +262,17 @@ ClassMethod getOtherName() As %Status
 {
 	set path=%request.Data("path",1)
 	set json=%request.Data("json",1)
-	
+	set version=%request.Data("version",1)
 	set resourceType=%request.Data("rType",1)
-	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
 	if path'=""
 	{
 		//w "123",!
 	   //set json=json.%Get(path)
-	  set resourceType=..getFHIRTYPE(resourceType,path)
+	  set resourceType=..getFHIRTYPE(resourceType,path,version)
 	   //w resourceType,!
 	}
-   set curren=	..getIndexList({}.%FromJSON(json),resourceType,path)
+   set curren=	..getIndexList({}.%FromJSON(json),resourceType,path,version)
    set result=[]
   
    //set resourceType="MessageDefinition"
@@ -248,7 +302,7 @@ ClassMethod getOtherName() As %Status
    Quit $$$OK
 }
 
-ClassMethod getIndexList(json As %DynamicObject, resourceType, path) As %DynamicArray
+ClassMethod getIndexList(json As %DynamicObject, resourceType, path, version) As %DynamicArray
 {
 	//w 
 	//w json.%ToJSON(),!
@@ -256,7 +310,7 @@ ClassMethod getIndexList(json As %DynamicObject, resourceType, path) As %Dynamic
 	{
 	   set json=json.%Get((json.%Size()-1))	
 	}*/
-	set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
 	set index={}
 	set itor=json.%GetIterator()
 	while itor.%GetNext(.key,.value)
@@ -274,37 +328,46 @@ ClassMethod getIndexList(json As %DynamicObject, resourceType, path) As %Dynamic
      Quit index
 }
 
-/// 获取必要节点
-ClassMethod getVlist() As %Status
-{
-	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
-	 
-	 w ..getFHIRTYPE("AllergyIntolerance","onsetPeriod")
-	 Quit $$$OK
-}
-
 ClassMethod getResourceValue() As %Status
 {
+	
 	set name=%request.Data("name",1)
 	set path=%request.Data("path",1)
-   set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	set version=%request.Data("version",1)
+   set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
    set resourceType=%request.Data("rType",1)
    //set name="allowedResponse"
    if (path'=""){
-       set resourceType=..getFHIRTYPE(resourceType,path)
+       set resourceType=..getFHIRTYPE(resourceType,path,version)
    }
-  // w resourceType,!
+   //w resourceType,!
    set type=$$$GetPropertyJsonType(schema, resourceType, name)
    //w type,!
    if type="s"
    {
-	SET result=""
+	   if ($$$IsPropertyValueSet(schema,resourceType, name)=1)
+	   {
+		    SET result=$$$NextValueInPropertyValueSet(schema,resourceType, name,"")
+		   }else{
+	      SET result=""	   
+		  }
+	
 	w result,!   
+	}ELSEif type="b"
+   {
+	   
+	
+	 w "true OR false",!   
+	}ELSEif type="n"
+   {
+	   
+	
+	 w "need num",!   
 	}elseif(type="o")
    {
 	set jname=$$$GetPropertyFHIRType(schema, resourceType, name)   
 	   //w jname,!
-	   set ob= ..getResourcrDetail(jname)
+	   set ob= ..getResourcrDetail(jname,version)
 	   if ($$$IsPropertyArray(schema, resourceType, name)=1)
 	   {
 		set ar=[]
@@ -326,11 +389,11 @@ ClassMethod getResourceValue() As %Status
    //set $lg(@schema.TiGbl@(resourceType, "*pn"),i)
 }
 
-ClassMethod getResourcrDetail(resourceType)
+ClassMethod getResourcrDetail(resourceType, version)
 {
    set result={}
 	
-	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	 set schema = ##class(HS.FHIRServer.Schema).LoadSchema(version)
 	 for i=1:1:$ll(@schema.TiGbl@(resourceType, "*pn"))
 	 {
 		 set name=$lg(@schema.TiGbl@(resourceType, "*pn"),i)
@@ -369,7 +432,7 @@ ClassMethod getZY(resourceType) As %Status
 {
 	//W "---",!
 	//W resourceType,!
-	set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+	set schema = ##class(HS.FHIRServer.Schema).LoadSchema("hl7.fhir.r4.core@4.0.1")
    	Set tPropName = $$$NextRequiredProperty(schema, resourceType, "")
    	//W resourceType,!
 	WHILE tPropName'="" {
@@ -385,7 +448,7 @@ ClassMethod valid() As %Status
 	
     SET TYPE=ob.resourceType
   if (TYPE'=""){
-  set schema = ##class(HS.FHIRServer.Schema).LoadSchema("R4")
+  set schema = ##class(HS.FHIRServer.Schema).LoadSchema("hl7.fhir.r4.core@4.0.1")
  set resourceValidator = ##class(HS.FHIRServer.Util.ResourceValidator).%New(schema)
 
  set tsc=resourceValidator.ValidateObject(ob,TYPE,TYPE,$$$OK,0) 
