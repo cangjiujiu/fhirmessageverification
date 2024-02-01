@@ -205,7 +205,7 @@
 
                 method: 'POST',
 
-                data: { "path":path,"json":JSON.stringify(json),"rType":$('#namelist').val() },
+                data: { "path":path,"json":JSON.stringify(json),"rType":$('#namelist').val(),"version":$('#versionlist').val() },
                 success: function (result) {
 	                
 	               result= JSON.parse(result)
@@ -259,7 +259,7 @@
 
                 method: 'POST',
 
-                data: {"name":name ,"path":tpath ,"rType":$('#namelist').val()},
+                data: {"name":name ,"path":tpath ,"rType":$('#namelist').val(),"version":$('#versionlist').val()},
                 success: function (result) {
 	                 console.log( obj)
 	                console.log(typeof obj)
@@ -299,7 +299,7 @@
 
                 method: 'POST',
 
-                data: {"name":$('#rType').val() ,"path":Tpath ,"rType":$('#namelist').val()},
+                data: {"name":$('#rType').val() ,"path":Tpath ,"rType":$('#namelist').val(),"version":$('#versionlist').val() },
                 success: function (result) {
 	                try {
             var obj=JSON.parse(result);
