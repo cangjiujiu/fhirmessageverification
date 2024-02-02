@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <link rel="stylesheet" href="css/jsoneditor.css" />
+
+
+    <title>Fhir|r4 message verification</title>
+
+    <style>
+        body {
+            padding: 0 70px;
+        }
+
+        #json {
+            margin: 10px 10px 10px 32px;
+            width: 50%;
+            min-height: 70px;
+        }
+
+        h1 {
+            font-family: Arial;
+            color: #EBBC6E;
+            text-align: center;
+            text-shadow: 1px 1px 1px black;
+            border-bottom: 1px solid gray;
+            padding-bottom: 50px;
+            width: 500px;
+            margin: 20px auto;
+        }
+
+        h1 img {
+            float: left;
+        }
+
+        h1 b {
+            color: black;
+            font-weight: normal;
+            display: block;
+            font-size: 12px;
+            text-shadow: none;
+        }
+
+        #legend {
+            display: inline;
+            margin-left: 30px;
+        }
+
+        #legend h2 {
+            display: inline;
+            font-size: 18px;
+            margin-right: 20px;
+        }
+
+        #legend a {
+            color: white;
+            margin-right: 20px;
+        }
+
+        #legend span {
+            padding: 2px 4px;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 1px black;
+            background-color: black;
+        }
+
+        #legend .string {
+            background-color: #009408;
+        }
+
+        #legend .array {
+            background-color: #2D5B89;
+        }
+
+        #legend .object {
+            background-color: #E17000;
+        }
+
+        #legend .number {
+            background-color: #497B8D;
+        }
+
+        #legend .boolean {
+            background-color: #B1C639;
+        }
+
+        #legend .null {
+            background-color: #B1C639;
+        }
+
+        #expander {
+            cursor: pointer;
+            margin-right: 20px;
+        }
+
+        #footer {
+            font-size: 13px;
+        }
+
+        #rest {
+            margin: 20px 0 20px 30px;
+        }
+
+        #rest label {
+            font-weight: bold;
+        }
+
+        #rest-callback {
+            width: 70px;
+        }
+
+        #rest-url {
+            width: 700px;
+        }
+
+        label[for="json"] {
+            margin-left: 30px;
+            display: block;
+        }
+
+        #json-note {
+            margin-left: 30px;
+            font-size: 12px;
+        }
+
+        .addthis_toolbox {
+            position: relative;
+            top: -10px;
+            margin-left: 30px;
+        }
+
+        #disqus_thread {
+            margin-top: 50px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            border-top: 1px solid gray;
+            border-bottom: 1px solid gray;
+        }
+
+        pre {
+            outline: 1px solid #ccc;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .string {
+            color: green;
+        }
+
+        .number {
+            color: green;
+        }
+
+        .boolean {
+            color: blue;
+        }
+
+        .null {
+            color: magenta;
+        }
+
+        .key {
+            color: blue;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+
+    <script type="text/javascript">
+
+
+
+
+    </script>
+</head>
+
+<body>
+    <h1>
+        Fhir|r4 message verification
+    </h1>
+
+
+    <div style="display:flex">
+        <div>
+
+            <div id="editor" class="json-editor"></div>
+
+
+            <textarea id="json" style="min-width:500px;height:400px" row=20></textarea><br />
+        </div>
+        <div>
+            <pre id="result">
+
+    </pre>
+        </div>
+    </div>
+    <script src="js/json2.js"></script>
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery.jsoneditor.js"></script>
+    <script src="js/jsoneditor.js"></script>
+    <script>
+        var resultArray = {}
+        function feed(o, path, value) {
+            // console.log(path)
+            var del = arguments.length == 2;
+
+            if (path.indexOf('.') > -1) {
+                var diver = o,
+                    i = 0,
+                    parts = path.split('.');
+                for (var len = parts.length; i < len - 1; i++) {
+                    diver = diver[parts[i]];
+                }
+                if (del) delete diver[parts[len - 1]];
+                else diver[parts[len - 1]] = value;
+            } else {
+                if (del) delete o[path];
+                else o[path] = value;
+            }
+
+            return o;
+        }
+        function get(o, path) {
+
+
+            var del = arguments.length == 2;
+
+            if (path.indexOf('.') > -1) {
+                var diver = o,
+                    i = 0,
+                    parts = path.split('.');
+                for (var len = parts.length; i < len; i++) {
+                    diver = diver[parts[i]];
+                    console.log(diver)
+                }
+            } else {
+                diver = o[path];
+            }
+            return diver;
+        }
+        function syntaxHighlight(json, nresultArray, Type) {
+            if (typeof json != 'string') {
+                json = JSON.stringify(json, undefined, 2);
+            }
+            json = json.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+            //console.log(json)
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'number';
+                var result = result = '<span class="' + cls + '" >' + match + '</span>';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                        result = '<span class="' + cls + '" >' + match + '</span>';
+                    } else {
+                        cls = 'string';
+                        result = '<span class="' + cls + '" >' + match + '</span>';
+                        if (/FHIRERROR/.test(match)) {
+
+                            temp = match.split(':')
+                            match1 = temp[1]
+
+                            match1 = match1.replace('"', '')
+                            match1 = match1.replace('"', '')
+                            console.log("///"+match1)
+                            match = nresultArray['' + match1 + ''].data
+                            cls = 'error'
+                            result = '<span class="' + cls + '" data-bs-toggle="tooltip" data-bs-placement="top" title="' + nresultArray['' + match1 + ''].text + '">' + match + '</span>';
+
+                        }
+                    }
+                } else if (/true|false/.test(match)) {
+                    result = '<span class="' + cls + '" >' + match + '</span>';
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    result = '<span class="' + cls + '" >' + match + '</span>';
+                    cls = 'null';
+                }
+                //console.log(cls )
+                return result;
+            });
+        }
+
+
+
+        var data = {}
+
+        //$('#result').html(syntaxHighlight(data));
+        $(function () {
+
+
+
+        })
+
+
+        // console.log(feed(data,"name",55))
+        function valid(data, path, type, text) {
+
+            if (type == "FHIRERRORMissingRequiredProperty") {
+                //console.log(get(data, path))
+                 var tempob = {}
+
+                tempob.text = text
+                tempob.data = "MissingRequiredProperty"
+                if (!resultArray[path]) {
+                    resultArray[path] = tempob
+                } else {
+                    resultArray[path].data = tempob.data
+                    resultArray[path].text = resultArray[path].text+";"+text
+                }
+                data = feed(data, path, type + ":" + path)
+            } else {
+                //path=path+point
+                var tempob = {}
+                tempob.text = text
+                var nw = get(data, path)
+
+                if (typeof data == "string") {
+                    tempob.data = nw
+
+                } else {
+                    tempob.data = JSON.stringify(nw)
+
+                }
+                if (!resultArray[path]) {
+                    resultArray[path] = tempob
+                } else {
+                    resultArray[path].data = tempob.data
+                    resultArray[path].text = resultArray[path].text+";"+text
+
+                }
+
+                data = feed(data, path, type + ":" + path)
+
+            }
+            return data
+        }
+        $('#json').change(function () {
+            var val = $('#json').val();
+
+            if (val) {
+                try { json = JSON.parse(val); }
+                catch (e) { alert('Error in parsing json. ' + e); }
+            } else {
+                json = {};
+            }
+            data = json
+            changetext()
+
+
+
+            $('#editor').jsonEditor(json, { change: updateJSON, propertyclick: showPath });
+        });
+
+
+
+        function printJSON() {
+
+            $('#json').val(JSON.stringify(json, null, 2));
+            changetext()
+        }
+        function changetext() {
+            json1 = $('#json').val()
+            resultArray=[]
+            $.ajax('http://'+window.location.host+'/fhirMessageVerification/valid', {
+
+                method: 'POST',
+
+                data: { "JSON": json1 },
+                success: function (result) {
+                    result = JSON.parse(result)
+                    var newdata = JSON.parse(json1)
+
+                    for (var key in result) {
+
+
+                        newdata = valid(newdata, result[key].path, result[key].ErrorType, result[key].text)
+
+                    }
+
+                    $('#result').html(syntaxHighlight(newdata, resultArray));
+
+
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            })
+
+
+        }
+
+    </script>
+</body>
+
+</html>
