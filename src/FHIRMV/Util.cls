@@ -5,7 +5,7 @@ Class FHIRMV.Util Extends %CSP.REST
 
 Parameter HandleCorsRequest = "true";
 
-XData UrlMap
+XData UrlMap [ XMLNamespace = "http://www.bjgoodwill.com/urlmap" ]
 {
 <Routes>
 
@@ -506,3 +506,4 @@ ClassMethod errorPath(Type, path, point) As %String
 }
 
 }
+
