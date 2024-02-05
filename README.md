@@ -2,7 +2,10 @@
 
 # Prerequisite for use
 
-  InterSystems FHIR R4 version needs to be installed
+  InterSystems FHIR R4 version needs to be installed,And during installation, it needs to be installed in the fhirserver namespace
+  
+  ![60bf99654be357892eeccab873d97e7](https://github.com/cangjiujiu/fhirmessageverification/assets/124135718/94ba9fb5-07d7-4838-9d02-4659701066ea)
+
 
 # IPM
 
