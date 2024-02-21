@@ -1,0 +1,35 @@
+     set ns ="FHIRSERVER"
+    
+     
+     Set appKey = "/csp/healthshare/"_ns_"/fhir/r4"
+     Set strategyClass = "HS.FHIRServer.Storage.Json.InteractionsStrategy"
+     Set metadataPackages = $lb("hl7.fhir.r4.core@4.0.1")
+     zn "HSLIB"
+     //Install a Foundation namespace and change to it
+     Do ##class(HS.Util.Installer.Foundation).Install(ns) 
+     zn ns
+	     //w 111
+      Do ##class(HS.FHIRServer.Installer).InstallNamespace()
+     Do ##class(HS.FHIRServer.Installer).InstallInstance(appKey, strategyClass, metadataPackages)
+     do $System.OBJ.LoadDir("/opt/fhirmessageverification/src","ck",,1)
+    
+     zn "%SYS"
+     Do ##class(Security.Users).UnExpireUserPasswords("*")
+     
+    
+
+    
+     
+     Set sc2("AutheEnabled")=64,sc2("IsNameSpaceDefault")=0,sc2("MatchRoles")=":%All",sc2("GroupById")="%ISCMgtPortal",sc2("NameSpace")="FHIRSERVER",sc2("DeepSeeEnabled")=1,sc2("DispatchClass")="FHIRMV.Util"
+     Set tSC=##Class(Security.Applications).Create("/fhirMessageVerification",.sc2)
+
+	 
+     w "11",!
+
+     Set sc("AutheEnabled")=64,sc("IsNameSpaceDefault")=0,sc("MatchRoles")=":%All",sc("GroupById")="%ISCMgtPortal",sc("NameSpace")="FHIRSERVER",sc("DeepSeeEnabled")=1,sc("Path")="/opt/fhirmessageverification/csp/"
+     
+     Set tSC1=##Class(Security.Applications).Create("/csp/fhirmessageverification",.sc)
+
+     w tSC1,!
+     
+     halt

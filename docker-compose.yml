@@ -1,0 +1,13 @@
+version: '3.6'
+services:
+  iris:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+#   command: --check-caps false
+    ports: 
+      - 23332:1972
+      - 23333:52773
+      - 22333:53773
+   
